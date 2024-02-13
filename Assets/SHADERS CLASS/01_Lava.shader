@@ -7,6 +7,11 @@ Shader"ENTI/01_Lava"
 		_NoiseTex ("Noise Texture", 2D) = "white" {}
 		_Flow1("Flow vector 1", Vector) = (1,0,0,0)
 		_Flow2("Flow vector 2", Vector) = (0.5,-0.5,0,0)
+
+		_FlowAmount("Flow amount", float) = 1.0
+		_FlowSpeed("Flow speed", float) = 1.0
+		_MoveSpeed("Move speed", float) = 0.01
+		_PulsePower("Pulse power", float) = 1.0
 	}
 	SubShader
 	{
@@ -40,6 +45,11 @@ Shader"ENTI/01_Lava"
 			float4 _NoiseTex_ST;
 			float4 _Flow1;
 			float4 _Flow2;
+			
+			float _FlowAmount;
+			float _FlowSpeed;
+			float _MoveSpeed;
+			float _PulsePower;
 
 			v2f vert (appdata v)
 			{
@@ -53,6 +63,10 @@ Shader"ENTI/01_Lava"
 				o.noise_uv = TRANSFORM_TEX(v.uv, _NoiseTex);
 				o.noise_uv += _Flow2.xy * _Time.x;
 	
+				//3. extra flow map
+				float2 flowVector = tex2Dlod(_NoiseTex, float4(o.uv, 0, 0)).rg;
+				o.uv += o.uv - flowVector * sin(_Time.y * _FlowSpeed) * _FlowAmount * _Time * (_MoveSpeed / 100);
+	
 				return o;
 			}
 
@@ -63,7 +77,12 @@ Shader"ENTI/01_Lava"
 				fixed2 disturb = noise.xy * 0.5 - 0.5;
 	
 				fixed4 col = tex2D(_MainTex, i.uv + disturb);
-
+				fixed noisePulse = tex2D(_NoiseTex, i.noise_uv + disturb).a;
+	
+				fixed4 temper = col * noisePulse * _PulsePower + (col * col - 0.1);
+				col = temper;
+				col.a = 1.0;
+	
 				return col;
 			}
 			ENDCG
