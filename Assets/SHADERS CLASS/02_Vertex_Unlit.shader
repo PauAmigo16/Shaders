@@ -57,11 +57,12 @@ v2f vert(appdata v)
     o.uv = TRANSFORM_TEX(local_uv, _MainTex);
     
     v.vertex *= _Scale;
+    float3 worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;
 
-    half4 displaceTex = tex2Dlod(_DispTex, float4(local_uv,0,0));
+    half4 displaceTex = tex2Dlod(_DispTex, float4(worldPos.x * _Time.x, worldPos.y , 0, 0));
     v.vertex.xyz += _Displacement * v.normal*displaceTex;
     
-
+    o.dispTex = displaceTex;
     
     o.vertex = UnityObjectToClipPos(v.vertex);
     
@@ -91,6 +92,7 @@ v2f vert(appdata v)
 fixed4 frag(v2f i) : SV_Target
 {
     half4 col = tex2D(_MainTex, i.uv);
+    col *= (i.dispTex * _Color);
     return col;
 }
             ENDCG
