@@ -84,11 +84,11 @@ float4 _BlendTex_ST;
                 col = lerp(col, second_color, blend_color.g);
                 col = lerp(col, third_color, blend_color.b);
 
-    //Sin
-    float sin_value = sin(_Time.y);
-    sin_value = saturate(sin_value);//clamps value (0,1)
-    sin_value = frac(sin_value);//returns fractional(decimal) = (0.0, 0.9)
-    col = lerp(_Color, _Color2, sin_value);
+    ////Sin
+    //float sin_value = sin(_Time.y);
+    //sin_value = saturate(sin_value);//clamps value (0,1)
+    //sin_value = frac(sin_value);//returns fractional(decimal) = (0.0, 0.9)
+    //col = lerp(_Color, _Color2, sin_value);
     
     return col;
 
