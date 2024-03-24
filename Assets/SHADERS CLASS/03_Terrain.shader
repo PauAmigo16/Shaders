@@ -6,6 +6,10 @@ Shader"ENTI/03_Terrain"
         _MainTex("Main Texture", 2D) = "white" {}
         _Heatmap("Heatmap", 2D) = "white" {}
         _MaxHeight("Max Height", float) = 1.0
+        _Center("Center", Vector) = (200,0,200,0)
+_Radius("Radius", Float) = 100
+_RadiusColor("Radius Color", Color) = (1,0,0,1)
+_RadiusWidth("Radius Width", Float) = 10
 
     }
     SubShader
@@ -19,6 +23,12 @@ Shader"ENTI/03_Terrain"
             #pragma fragment frag
 
             #include "UnityCG.cginc"
+                
+            struct Input
+{
+ float2 uv_MainTex; // The UV of the terrain texture
+ float3 worldPos; // The in-world position
+};
 
             struct appdata
             {
@@ -30,6 +40,8 @@ Shader"ENTI/03_Terrain"
             {
                 float4 vertex : SV_POSITION;
     float2 uv : TEXCOORD0;
+    float4 albedo : fixed4;
+    float3 worldPos : TEXCOORD1;
     
 };
 sampler2D _MainTex;
@@ -38,13 +50,19 @@ sampler2D _Heatmap;
 float4 _Heatmap_ST;
 fixed4 _Color;
 float _MaxHeight;
+float3 _Center;
+float _Radius;
+fixed4 _RadiusColor;
+float _RadiusWidth;
 
             v2f vert (appdata v)
             {
     v2f o;
     o.uv = v.uv;
+    o.vertex=v.vertex;
+    o.worldPos = mul(unity_ObjectToWorld, v.vertex);
     o.vertex = UnityObjectToClipPos(v.vertex);
-                //o.vertex = mul(unity_ObjectToWorld, float4(v.vertex.xyz, 1.0));
+    o.vertex = mul(unity_ObjectToWorld, float4(v.vertex.xyz, 1.0));
                 ////A
                 //o.vertex = mul(UNITY_MATRIX_VP, o.vertex);
                 ////B
@@ -62,7 +80,7 @@ float _MaxHeight;
     o.vertex.y = o.vertex.y + l_Height;
     o.vertex = mul(UNITY_MATRIX_VP, o.vertex);
 
-                //o.uv = v.uv;
+    //o.uv = v.uv;
     return o;
 
             }
@@ -70,7 +88,18 @@ float _MaxHeight;
             fixed4 frag (v2f i) : SV_Target
             {       
     fixed4 col;
-    col= tex2D(_Heatmap, i.uv);
+    float d = distance(_Center, i.worldPos);
+ // If the distance is larger than the radius and
+ // it is less than our radius + width change the color
+ if ((d > _Radius) && (d < (_Radius + _RadiusWidth)))
+ {
+    col = _RadiusColor;
+ }
+ // Otherwise, use the normal color
+ else
+ {
+     col = tex2D(_Heatmap, i.uv);
+ }
                 return col;
             }
             ENDCG
